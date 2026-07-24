@@ -5,6 +5,8 @@ import { createCohortSlug, convertSlugToName } from "../utils/index";
 
 // Import the string from the .env with URL of the API/server - http://localhost:5005
 const API_URL = import.meta.env.VITE_API_URL;
+console.log("API_URL:", API_URL);
+
 
 const DEFAULT_COHORT_FORM_VALUES = {
   cohortSlug: "format-program-campus-startDate",
@@ -53,7 +55,11 @@ function CohortCreatePage() {
 
         navigate(`/cohorts/details/${newCohort._id}`);
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+      console.log(error);
+      console.log(error.response);
+      console.log(error.response?.data);
+});
   };
 
   return (

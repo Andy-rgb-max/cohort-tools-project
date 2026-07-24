@@ -1,57 +1,465 @@
-[
-  {
-    "_id": 1,
-    "inProgress": false,
-    "cohortSlug": "ft-wd-paris-2023-07-03",
-    "cohortName": "FT WD PARIS 2023 07",
-    "program": "Web Dev",
-    "campus": "Paris",
-    "startDate": "2023-07-03T00:00:00.000Z",
-    "endDate": "2023-09-08T00:00:00.000Z",
-    "programManager": "Sally Daher",
-    "leadTeacher": "Florian Aube",
-    "totalHours": 360
-  },
-  {
-    "_id": 2,
-    "cohortSlug": "pt-ux-berlin-2023-02-06",
-    "cohortName": "PT UX BERLIN 2023 02",
-    "program": "UX/UI",
-    "format": "Part Time",
-    "campus": "Berlin",
-    "startDate": "2023-02-06T00:00:00.000Z",
-    "endDate": "2023-08-06T00:00:00.000Z",
-    "inProgress": false,
-    "programManager": "Alice Williams",
-    "leadTeacher": "Bob Johnson",
-    "totalHours": 360
-  },
-  {
-    "_id": 3,
-    "cohortSlug": "ft-da-miami-2023-03-06",
-    "cohortName": "FT DA MIAMI 2023 03",
-    "program": "Data Analytics",
-    "format": "Full Time",
-    "campus": "Miami",
-    "startDate": "2023-03-06T00:00:00.000Z",
-    "endDate": "2023-05-15T00:00:00.000Z",
-    "inProgress": true,
-    "programManager": "Charlie Brown",
-    "leadTeacher": "Eva Edwards",
-    "totalHours": 360
-  },
-  {
-    "_id": 4,
-    "cohortSlug": "pt-cy-paris-2023-04-03",
-    "cohortName": "PT CY PARIS 2023 04",
-    "program": "Cybersecurity",
-    "format": "Part Time",
-    "campus": "Paris",
-    "startDate": "2023-04-03T00:00:00.000Z",
-    "endDate": "2023-10-03T00:00:00.000Z",
-    "inProgress": false,
-    "programManager": "Eva Edwards",
-    "leadTeacher": "Frank Foster",
-    "totalHours": 360
+const PORT = 5005;
+
+import express from "express";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import "dotenv/config";
+
+import connectiondb from "./db/mongoose.connection.js";
+import Cohort from "./model/cohortsModel.js";
+import Student from "./model/studentsModel.js";
+import User from "./model/User.model.js";
+import errorHandler from "./middleware/errorHandler.js";
+import authRoutes from "./routes/auth.routes.js";
+import { isAuthenticated } from "./middleware/jwtMiddleware.js";
+
+const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
+
+app.use(express.json());
+app.use(morgan("dev"));
+app.use(express.static("public"));
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use("/auth", authRoutes);
+
+/* ======================
+          HOME
+====================== */
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "Cohort Tools API",
+  });
+});
+
+
+/* ======================
+          DOCS
+====================== */
+
+app.get("/docs", (req, res, next) => {
+  try {
+    res.sendFile(import.meta.dirname + "/views/docs.html");
+  } catch (error) {
+    next(error);
   }
-]
+});
+
+
+/* ======================
+      COHORT ROUTES
+====================== */
+
+
+// GET ALL COHORTS
+app.get("/api/cohorts", async (req, res, next) => {
+  try {
+
+    const cohorts = await Cohort.find();
+
+    res.status(200).json(cohorts);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+});
+
+
+// GET ONE COHORT
+app.get("/api/cohorts/:cohortId", async (req, res, next) => {
+
+  try {
+
+    const { cohortId } = req.params;
+
+    const cohort = await Cohort.findById(cohortId);
+
+
+    if (!cohort) {
+
+      return res.status(404).json({
+        message: "Cohort not found",
+      });
+
+    }
+
+
+    res.status(200).json(cohort);
+
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+// CREATE COHORT
+app.post("/api/cohorts", async (req, res, next) => {
+
+  try {
+
+    const newCohort = await Cohort.create(req.body);
+
+    res.status(201).json(newCohort);
+
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+// UPDATE COHORT
+app.put("/api/cohorts/:cohortId", async (req, res, next) => {
+
+  try {
+
+    const { cohortId } = req.params;
+
+
+    const updatedCohort = await Cohort.findByIdAndUpdate(
+      cohortId,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+
+    if (!updatedCohort) {
+
+      return res.status(404).json({
+        message: "Cohort not found",
+      });
+
+    }
+
+
+    res.status(200).json(updatedCohort);
+
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+// DELETE COHORT
+app.delete("/api/cohorts/:cohortId", async (req, res, next) => {
+
+  try {
+
+    const { cohortId } = req.params;
+
+
+    const deletedCohort = await Cohort.findByIdAndDelete(cohortId);
+
+
+    if (!deletedCohort) {
+
+      return res.status(404).json({
+        message: "Cohort not found",
+      });
+
+    }
+
+
+    res.status(200).json({
+
+      message: "Cohort deleted successfully",
+
+      deletedCohort,
+
+    });
+
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+
+/* ======================
+      STUDENT ROUTES
+====================== */
+
+
+// GET ALL STUDENTS
+app.get("/api/students", async (req, res, next) => {
+
+  try {
+
+    const students = await Student.find();
+
+    res.status(200).json(students);
+
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+// GET ONE STUDENT
+app.get("/api/students/:studentId", async (req, res, next) => {
+
+  try {
+
+    const { studentId } = req.params;
+
+
+    const student = await Student.findById(studentId);
+
+
+    if (!student) {
+
+      return res.status(404).json({
+
+        message: "Student not found",
+
+      });
+
+    }
+
+
+    res.status(200).json(student);
+
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+// CREATE STUDENT
+app.post("/api/students", async (req, res, next) => {
+
+  try {
+
+    const newStudent = await Student.create(req.body);
+
+
+    res.status(201).json(newStudent);
+
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+// UPDATE STUDENT
+app.put("/api/students/:studentId", async (req, res, next) => {
+
+  try {
+
+    const { studentId } = req.params;
+
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+
+    if (!updatedStudent) {
+
+      return res.status(404).json({
+
+        message: "Student not found",
+
+      });
+
+    }
+
+
+    res.status(200).json(updatedStudent);
+
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+// DELETE STUDENT
+app.delete("/api/students/:studentId", async (req, res, next) => {
+
+  try {
+
+    const { studentId } = req.params;
+
+
+    const deletedStudent = await Student.findByIdAndDelete(studentId);
+
+
+    if (!deletedStudent) {
+
+      return res.status(404).json({
+
+        message: "Student not found",
+
+      });
+
+    }
+
+
+    res.status(200).json({
+
+      message: "Student deleted successfully",
+
+      deletedStudent,
+
+    });
+
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+
+/* ======================
+        USER ROUTES
+====================== */
+
+
+// GET ONE USER (protected)
+app.get("/api/users/:userId", isAuthenticated(), async (req, res, next) => {
+
+  try {
+
+    const { userId } = req.params;
+
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) {
+
+      return res.status(404).json({
+        message: "User not found",
+      });
+
+    }
+
+    res.status(200).json(user);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+
+
+/* ======================
+          STATUS
+====================== */
+
+app.get("/api/status", (req, res) => {
+
+  res.status(200).json({
+
+    status: "API running",
+
+    port: PORT,
+
+    timestamp: new Date(),
+
+  });
+
+});
+
+
+
+/* ======================
+        404 ROUTE
+====================== */
+
+app.use((req, res) => {
+
+  res.status(404).json({
+
+    message: "Route not found",
+
+  });
+
+});
+
+
+/* ======================
+      ERROR HANDLER
+====================== */
+
+app.use(errorHandler);
+
+
+
+/* ======================
+      START SERVER
+====================== */
+
+connectiondb()
+
+  .then(() => {
+
+    console.log("Connected to MongoDB");
+
+
+    app.listen(PORT, () => {
+
+      console.log(`Server listening on port ${PORT}`);
+
+    });
+
+  })
+
+  .catch((error) => {
+
+    console.log(error);
+
+  });

@@ -18,28 +18,18 @@ const DEFAULT_STUDENT_FORM_VALUES = {
 };
 
 function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
-  const [student, setStudent] = useState({ ...DEFAULT_STUDENT_FORM_VALUES });
+  const [student, setStudent] = useState({
+    ...DEFAULT_STUDENT_FORM_VALUES,
+    cohort: cohortId,
+  });
+
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const requestBody = { ...student, cohort: cohortId };
-
-    setSubmitting(true);
-
-    axios
-      .post(`${API_URL}/api/students`, requestBody)
-      .then(() => {
-        // Reset the state to clear the inputs
-        setStudent({ ...DEFAULT_STUDENT_FORM_VALUES, cohort: cohortId });
-        setSubmitting(false);
-        callback();
-      })
-      .catch((error) => console.log(error));
-  };
-
   useEffect(() => {
-    setStudent({ ...DEFAULT_STUDENT_FORM_VALUES, cohort: cohortId });
+    setStudent({
+      ...DEFAULT_STUDENT_FORM_VALUES,
+      cohort: cohortId,
+    });
   }, [cohortId]);
 
   const handleChange = (e) => {
@@ -49,7 +39,8 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
 
     if (multiple && options) {
       inputValue = [];
-      for (var i = 0, l = options.length; i < l; i++) {
+
+      for (let i = 0; i < options.length; i++) {
         if (options[i].selected) {
           inputValue.push(options[i].value);
         }
@@ -62,12 +53,38 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
     }));
   };
 
-  useEffect(() => {
-    setStudent({ ...DEFAULT_STUDENT_FORM_VALUES });
-  }, [cohortId]);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const requestBody = {
+      ...student,
+      cohort: cohortId,
+    };
+
+    console.log("Student being sent:", requestBody);
+
+    setSubmitting(true);
+
+    axios
+      .post(`${API_URL}/api/students`, requestBody)
+      .then(() => {
+        setStudent({
+          ...DEFAULT_STUDENT_FORM_VALUES,
+          cohort: cohortId,
+        });
+
+        setSubmitting(false);
+
+        callback();
+      })
+      .catch((error) => {
+        console.log(error);
+        setSubmitting(false);
+      });
+  };
 
   return (
-    <div className="AddStudent bg-white-100 p-8 pb-4 rounded-lg shadow-md flex flex-col h-[100vh] relative  w-full max-w-3xl mx-auto">
+    <div className="AddStudent bg-white-100 p-8 pb-4 rounded-lg shadow-md flex flex-col h-[100vh] relative w-full max-w-3xl mx-auto">
       <div className="flex justify-center bg-white items-center mb-4 absolute top-0 left-0 right-0 py-2 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 border-b border-gray-300 shadow-sm"></div>
 
       <form
@@ -75,6 +92,7 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
         className="grid grid-cols-1 gap-2 overflow-y-auto mt-12 px-4"
       >
         <h3 className="text-xl mt-4 mb-4 sticky left-0">Add Student</h3>
+
         <div className="flex flex-col mb-2">
           <label className="mb-1 font-medium">First Name:</label>
           <input
@@ -83,7 +101,7 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
             value={student.firstName}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border border-gray-300 bg-gray-50 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-200 focus:z-10 transform transition-transform duration-200 focus:translate-y-[-1px]"
+            className="w-full border border-gray-300 bg-gray-50 p-2 rounded"
           />
         </div>
 
@@ -95,7 +113,7 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
             value={student.lastName}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border border-gray-300 bg-gray-50 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-200 focus:z-10 transform transition-transform duration-200 focus:translate-y-[-1px]"
+            className="w-full border border-gray-300 bg-gray-50 p-2 rounded"
           />
         </div>
 
@@ -107,7 +125,7 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
             value={student.email}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border border-gray-300 bg-gray-50 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-200 focus:z-10 transform transition-transform duration-200 focus:translate-y-[-1px]"
+            className="w-full border border-gray-300 bg-gray-50 p-2 rounded"
           />
         </div>
 
@@ -119,7 +137,7 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
             value={student.phone}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border border-gray-300 bg-gray-50 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-200 focus:z-10 transform transition-transform duration-200 focus:translate-y-[-1px]"
+            className="w-full border border-gray-300 bg-gray-50 p-2 rounded"
           />
         </div>
 
@@ -131,7 +149,7 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
             value={student.linkedinUrl}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border border-gray-300 bg-gray-50 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-200 focus:z-10 transform transition-transform duration-200 focus:translate-y-[-1px]"
+            className="w-full border border-gray-300 bg-gray-50 p-2 rounded"
           />
         </div>
 
@@ -143,7 +161,7 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
             onChange={handleChange}
             multiple
             disabled={submitting}
-            className="w-full border border-gray-300 bg-gray-50 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-200 focus:z-10 transform transition-transform duration-200 focus:translate-y-[-1px]"
+            className="w-full border border-gray-300 bg-gray-50 p-2 rounded"
           >
             <option value="English">English</option>
             <option value="Spanish">Spanish</option>
@@ -162,7 +180,7 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
             value={student.program}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border border-gray-300 bg-gray-50 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-200 focus:z-10 transform transition-transform duration-200 focus:translate-y-[-1px]"
+            className="w-full border border-gray-300 bg-gray-50 p-2 rounded"
           >
             <option value="">-- Select a program --</option>
             <option value="Web Dev">Web Dev</option>
@@ -179,8 +197,8 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
             value={student.background}
             onChange={handleChange}
             disabled={submitting}
-            className="border p-2 rounded h-auto"
             rows="4"
+            className="border p-2 rounded"
           />
         </div>
 
@@ -192,34 +210,34 @@ function StudentCreateForm({ cohortId, cohortName, callback, closeCallback }) {
             value={student.image}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border border-gray-300 bg-gray-50 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-200 focus:z-10 transform transition-transform duration-200 focus:translate-y-[-1px]"
+            className="w-full border border-gray-300 bg-gray-50 p-2 rounded"
           />
         </div>
 
         <div className="flex flex-col mb-2">
           <label className="mb-1 font-medium">Cohort:</label>
           <select
-            name="cohort"
             value={cohortId}
-            onChange={handleChange}
             disabled
-            className="w-full border border-gray-300 bg-gray-50 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-200 focus:z-10 transform transition-transform duration-200 focus:translate-y-[-1px]"
+            className="w-full border border-gray-300 bg-gray-50 p-2 rounded"
           >
             <option value={cohortId}>{cohortName}</option>
           </select>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 flex gap-2">
           <button
             type="submit"
             disabled={submitting}
-            className="text-white w-20 px-4 py-2 rounded bg-green-500 hover:bg-green-600 transition duration-300 ease-in-out"
+            className="text-white w-20 px-4 py-2 rounded bg-green-500 hover:bg-green-600"
           >
             Save
           </button>
+
           <button
+            type="button"
             onClick={closeCallback}
-            className="text-white mt-2 bg-red-500 hover:bg-red-600  w-20 px-4 py-2 rounded transition duration-300 ease-in-out"
+            className="text-white w-20 px-4 py-2 rounded bg-red-500 hover:bg-red-600"
           >
             Close
           </button>

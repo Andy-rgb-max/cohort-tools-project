@@ -9,6 +9,8 @@ import "dotenv/config";
 import connectiondb from "./db/mongoose.connection.js";
 import Cohort from "./model/cohortsModel.js";
 import Student from "./model/studentsModel.js";
+import errorHandler from "./middleware/errorHandler.js";
+import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -23,6 +25,7 @@ app.use(morgan("dev"));
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use("/auth", authRoutes);
 
 /* ======================
           HOME
@@ -39,11 +42,11 @@ app.get("/", (req, res) => {
           DOCS
 ====================== */
 
-app.get("/docs", (req, res) => {
+app.get("/docs", (req, res, next) => {
   try {
     res.sendFile(import.meta.dirname + "/views/docs.html");
   } catch (error) {
-    res.status(500).json(error);
+    next(error);
   }
 });
 
@@ -54,7 +57,7 @@ app.get("/docs", (req, res) => {
 
 
 // GET ALL COHORTS
-app.get("/api/cohorts", async (req, res) => {
+app.get("/api/cohorts", async (req, res, next) => {
   try {
 
     const cohorts = await Cohort.find();
@@ -63,14 +66,14 @@ app.get("/api/cohorts", async (req, res) => {
 
   } catch (error) {
 
-    res.status(500).json(error);
+    next(error);
 
   }
 });
 
 
 // GET ONE COHORT
-app.get("/api/cohorts/:cohortId", async (req, res) => {
+app.get("/api/cohorts/:cohortId", async (req, res, next) => {
 
   try {
 
@@ -93,7 +96,7 @@ app.get("/api/cohorts/:cohortId", async (req, res) => {
 
   } catch (error) {
 
-    res.status(500).json(error);
+    next(error);
 
   }
 
@@ -101,7 +104,7 @@ app.get("/api/cohorts/:cohortId", async (req, res) => {
 
 
 // CREATE COHORT
-app.post("/api/cohorts", async (req, res) => {
+app.post("/api/cohorts", async (req, res, next) => {
 
   try {
 
@@ -112,9 +115,7 @@ app.post("/api/cohorts", async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
-
-    res.status(500).json(error);
+    next(error);
 
   }
 
@@ -122,7 +123,7 @@ app.post("/api/cohorts", async (req, res) => {
 
 
 // UPDATE COHORT
-app.put("/api/cohorts/:cohortId", async (req, res) => {
+app.put("/api/cohorts/:cohortId", async (req, res, next) => {
 
   try {
 
@@ -153,9 +154,7 @@ app.put("/api/cohorts/:cohortId", async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
-
-    res.status(500).json(error);
+    next(error);
 
   }
 
@@ -163,7 +162,7 @@ app.put("/api/cohorts/:cohortId", async (req, res) => {
 
 
 // DELETE COHORT
-app.delete("/api/cohorts/:cohortId", async (req, res) => {
+app.delete("/api/cohorts/:cohortId", async (req, res, next) => {
 
   try {
 
@@ -193,9 +192,7 @@ app.delete("/api/cohorts/:cohortId", async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
-
-    res.status(500).json(error);
+    next(error);
 
   }
 
@@ -209,7 +206,7 @@ app.delete("/api/cohorts/:cohortId", async (req, res) => {
 
 
 // GET ALL STUDENTS
-app.get("/api/students", async (req, res) => {
+app.get("/api/students", async (req, res, next) => {
 
   try {
 
@@ -220,7 +217,7 @@ app.get("/api/students", async (req, res) => {
 
   } catch (error) {
 
-    res.status(500).json(error);
+    next(error);
 
   }
 
@@ -228,7 +225,7 @@ app.get("/api/students", async (req, res) => {
 
 
 // GET ONE STUDENT
-app.get("/api/students/:studentId", async (req, res) => {
+app.get("/api/students/:studentId", async (req, res, next) => {
 
   try {
 
@@ -254,9 +251,7 @@ app.get("/api/students/:studentId", async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
-
-    res.status(500).json(error);
+    next(error);
 
   }
 
@@ -264,7 +259,7 @@ app.get("/api/students/:studentId", async (req, res) => {
 
 
 // CREATE STUDENT
-app.post("/api/students", async (req, res) => {
+app.post("/api/students", async (req, res, next) => {
 
   try {
 
@@ -276,9 +271,7 @@ app.post("/api/students", async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
-
-    res.status(500).json(error);
+    next(error);
 
   }
 
@@ -286,7 +279,7 @@ app.post("/api/students", async (req, res) => {
 
 
 // UPDATE STUDENT
-app.put("/api/students/:studentId", async (req, res) => {
+app.put("/api/students/:studentId", async (req, res, next) => {
 
   try {
 
@@ -319,9 +312,7 @@ app.put("/api/students/:studentId", async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
-
-    res.status(500).json(error);
+    next(error);
 
   }
 
@@ -329,7 +320,7 @@ app.put("/api/students/:studentId", async (req, res) => {
 
 
 // DELETE STUDENT
-app.delete("/api/students/:studentId", async (req, res) => {
+app.delete("/api/students/:studentId", async (req, res, next) => {
 
   try {
 
@@ -361,9 +352,7 @@ app.delete("/api/students/:studentId", async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
-
-    res.status(500).json(error);
+    next(error);
 
   }
 
@@ -404,6 +393,13 @@ app.use((req, res) => {
   });
 
 });
+
+
+/* ======================
+      ERROR HANDLER
+====================== */
+
+app.use(errorHandler);
 
 
 

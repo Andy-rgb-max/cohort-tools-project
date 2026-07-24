@@ -10,17 +10,17 @@ import students from "../students.json" with { type: "json" };
 
 async function seedDatabase() {
   try {
-    // Conecta ao banco
+    // Connect to the database
     await connectiondb();
     console.log("Connected to MongoDB");
 
-    // Limpa as coleções
+    // Clear collections
     await Cohort.deleteMany({});
     await Student.deleteMany({});
 
     console.log("Collections cleaned.");
 
-    // Remove o _id numérico dos cohorts
+    // Remove the numeric _id from cohorts
     const cohortsWithoutId = cohorts.map((cohort) => {
       const { _id, ...rest } = cohort;
       return rest;
@@ -29,20 +29,20 @@ async function seedDatabase() {
     console.log("=== Cohorts to insert ===");
     console.log(cohortsWithoutId);
 
-    // Insere os cohorts
+    // Insert cohorts
     const createdCohorts = await Cohort.insertMany(cohortsWithoutId);
 
     console.log(`${createdCohorts.length} cohorts inserted.`);
 
-    // Cria um mapa:
-    // ID antigo (1,2,3...) -> novo ObjectId
+    // Create a mapping:
+    // Old ID (1, 2, 3...) -> New ObjectId
     const cohortMap = {};
 
     cohorts.forEach((oldCohort, index) => {
       cohortMap[oldCohort._id] = createdCohorts[index]._id;
     });
 
-    // Remove o _id dos students e troca o cohort numérico pelo ObjectId
+    // Remove the _id from students and replace the numeric cohort ID with the corresponding ObjectId
     const studentsWithCorrectIds = students.map((student) => {
       const { _id, ...rest } = student;
 
@@ -55,7 +55,7 @@ async function seedDatabase() {
     console.log("=== Students to insert ===");
     console.log(studentsWithCorrectIds);
 
-    // Insere os students
+    // Insert students
     const createdStudents = await Student.insertMany(studentsWithCorrectIds);
 
     console.log(`${createdStudents.length} students inserted.`);
